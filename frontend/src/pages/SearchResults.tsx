@@ -2,48 +2,55 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Movie } from "@/types";
 import { useAuth } from "@/context/auth";
-import {
-  fetchContentBasedRecommendation,
-  fetchHybridRecommendation,
-  fetchUserBasedRecommendation,
-} from "@/api/movies";
 import { MovieCarousel } from "@/components/movie-carousel";
+import { useRecommendations } from "@/hooks/useRecommendations";
 
 export default function SearchResults() {
   const [movies, setMovies] = useState<Movie[]>([]);
-  const [recommended, setRecommended] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
 
+  const { recommended } = useRecommendations(15);
+
   const queryParams = new URLSearchParams(location.search);
   const query = queryParams.get("query") || "";
 
-  // ✅ redirect if not logged in
+  // redirect if not logged in
   useEffect(() => {
     if (!authLoading && !user) {
       navigate("/login", { replace: true });
     }
   }, [authLoading, user, navigate]);
 
-  // ✅ fetch search results
+  // fetch search results
   useEffect(() => {
     if (!query || !user) return;
 
     async function fetchMovies() {
       try {
         setLoading(true);
+
         const res = await fetch(
           `${
             import.meta.env.VITE_API_URL
           }/movies/search?query=${encodeURIComponent(query)}`
         );
-        const data = await res.json();
-        setMovies(data || []);
+
+        // <-- IMPORTANT: cast the JSON to Movie[]
+        const data = (await res.json()) as Movie[];
+
+        // dedupe by _id and keep typing
+        const unique = Array.from(
+          new Map((data || []).map((m: Movie) => [m._id, m])).values()
+        ) as Movie[];
+
+        setMovies(unique);
       } catch (err) {
         console.error("Error fetching search results:", err);
+        setMovies([]);
       } finally {
         setLoading(false);
       }
@@ -51,30 +58,6 @@ export default function SearchResults() {
 
     fetchMovies();
   }, [query, user]);
-
-  // ✅ fetch recommended movies (You may also like)
-  useEffect(() => {
-    if (!user) return;
-
-    async function fetchRecommended() {
-      try {
-        const [content, hybrid, userBased] = await Promise.all([
-          fetchContentBasedRecommendation(),
-          fetchHybridRecommendation(),
-          fetchUserBasedRecommendation(),
-        ]);
-        const combined = [...content, ...hybrid, ...userBased];
-        const unique = Array.from(
-          new Map(combined.map((m) => [m._id, m])).values()
-        );
-        setRecommended(unique.slice(0, 15));
-      } catch (err) {
-        console.error("Error fetching recommendations:", err);
-      }
-    }
-
-    fetchRecommended();
-  }, [user]);
 
   if (authLoading) {
     return (
@@ -94,18 +77,25 @@ export default function SearchResults() {
         </div>
       )}
 
-      {/* ✅ Carousel for search results */}
+      {/* Carousel for search results */}
       {!loading && movies.length > 0 ? (
         <MovieCarousel movies={movies} autoScroll={false} />
       ) : (
         !loading && <p>No results found.</p>
       )}
 
-      {/* ✅ You may also like section */}
+      {/* You may also like section */}
       {recommended.length > 0 && (
         <div className="mt-12">
           <h3 className="text-xl font-semibold mb-4">You May Also Like</h3>
-          <MovieCarousel movies={recommended} autoScroll />
+          <MovieCarousel
+            movies={
+              Array.from(
+                new Map(recommended.map((m) => [m._id, m])).values()
+              ) as Movie[]
+            }
+            autoScroll
+          />
         </div>
       )}
     </div>

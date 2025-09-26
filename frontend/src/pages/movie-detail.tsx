@@ -47,7 +47,9 @@ function removeFromList(user: any, key: string, movieId: string) {
 export default function MovieDetail() {
   const { movieId } = useParams();
   const { data: movie, isLoading: loading, error } = useMovieById(movieId!);
-  const { data: similarMovies } = useSimilarMovies(movieId!);
+  const { data: similarMovies, isLoading: similarLoading } = useSimilarMovies(
+    movieId!
+  );
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -216,19 +218,19 @@ export default function MovieDetail() {
             <TabsList className="grid w-full grid-cols-3 rounded-lg border bg-muted p-1">
               <TabsTrigger
                 value="cast"
-                className="data-[state=active]:bg-background data-[state=active]:text-foreground rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-all"
+                className="data-[state=active]:bg-chart-3 data-[state=active]:text-background rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-all"
               >
                 Cast & Crew
               </TabsTrigger>
               <TabsTrigger
                 value="reviews"
-                className="data-[state=active]:bg-background data-[state=active]:text-foreground rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-all"
+                className="data-[state=active]:bg-chart-3 data-[state=active]:text-background rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-all"
               >
                 Reviews
               </TabsTrigger>
               <TabsTrigger
                 value="similar"
-                className="data-[state=active]:bg-background data-[state=active]:text-foreground rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-all"
+                className="data-[state=active]:bg-chart-3 data-[state=active]:text-background rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-all"
               >
                 Similar Movies
               </TabsTrigger>
@@ -246,32 +248,44 @@ export default function MovieDetail() {
             </TabsContent>
 
             <TabsContent value="similar" className="pt-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {similarMovies?.map((sm) => (
+              {similarLoading ? (
+                <div className="flex justify-center items-center h-40">
+                  <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-blue-500"></div>
+                </div>
+              ) : similarMovies && similarMovies.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {similarMovies.map((movie) => (
                     <Link
-                      to={`/movies/${sm._id}`}
-                      key={sm._id}
+                      to={`/movies/${movie._id}`}
+                      key={movie._id}
                       className="flex gap-4 animate-fade-in"
                     >
                       <img
-                        src={sm.posterUrl || "/placeholder.svg"}
-                        alt={sm.title}
+                        src={movie.posterUrl || "/placeholder.svg"}
+                        alt={movie.title}
                         className="w-24 h-36 object-cover rounded"
                       />
                       <div>
-                        <h3 className="font-semibold">{sm.title}</h3>
+                        <h3 className="font-semibold">{movie.title}</h3>
                         <div className="text-sm text-muted-foreground mb-1">
-                          {sm.releaseYear} • {sm.genres?.join(", ")}
+                          {movie.releaseYear} • {movie.genres?.join(", ")}
                         </div>
                         <div className="flex items-center text-yellow-400 text-sm mb-2">
                           <Star className="h-3 w-3 mr-1 fill-yellow-400 stroke-yellow-400" />
-                          <span>{sm.imdbRating}</span>
+                          <span>{movie.imdbRating}</span>
                         </div>
-                        <p className="text-sm line-clamp-2">{sm.description}</p>
+                        <p className="text-sm line-clamp-2">
+                          {movie.description}
+                        </p>
                       </div>
                     </Link>
                   ))}
-              </div>
+                </div>
+              ) : (
+                <p className="text-gray-400 text-center">
+                  No similar movies found.
+                </p>
+              )}
             </TabsContent>
           </Tabs>
         </div>

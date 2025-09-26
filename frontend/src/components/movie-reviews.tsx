@@ -62,7 +62,10 @@ export function MovieReviews({ movieId }: MovieReviewsProps) {
 
         {ratingsData && ratingsData?.length > 0 ? (
           ratingsData?.map((rating) => (
-            <div key={rating._id} className="border-b pb-4 last:border-0">
+            <div
+              key={rating._id}
+              className="border-b border-gray-700/40 pb-4 last:border-0 hover:bg-muted/30 transition-colors rounded-lg p-3"
+            >
               <div className="flex items-start gap-4">
                 <Avatar>
                   <AvatarFallback>
@@ -73,18 +76,27 @@ export function MovieReviews({ movieId }: MovieReviewsProps) {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">{rating.userId.username}</p>
-                      <div className="flex items-center mt-1">
+                      <div className="flex gap-2">
                         {Array.from({ length: 5 }).map((_, i) => (
-                          <Star
+                          <button
                             key={i}
-                            className={`h-4 w-4 ${
-                              i < rating.rating
-                                ? "fill-yellow-400 text-yellow-400"
-                                : "text-gray-300"
-                            }`}
-                          />
+                            type="button"
+                            disabled={isPending}
+                            onClick={() => setRating(i + 1)}
+                            className="focus:outline-none group"
+                          >
+                            <Star
+                              className={`h-8 w-8 transition-all duration-200 
+                                  ${
+                                    i < rating.rating
+                                      ? "fill-yellow-400 text-yellow-400 scale-110 drop-shadow-md"
+                                      : "text-gray-400 group-hover:text-yellow-300 hover:scale-110"
+                                  }`}
+                            />
+                          </button>
                         ))}
                       </div>
+
                       <p className="text-sm mt-1 text-muted-foreground">
                         {formatDate(rating.createdAt)}
                       </p>
@@ -124,8 +136,8 @@ export function MovieReviews({ movieId }: MovieReviewsProps) {
       </div>
 
       {!!auth.user && (
-        <div className="bg-muted/50 p-6 rounded-lg">
-          <h3 className="text-lg font-semibold mb-4">Write a Review</h3>
+        <div className="bg-chart-3/60 backdrop-blur-sm p-6 rounded-xl border border-gray-700/40 shadow-md">
+          <h3 className="text-lg  font-semibold mb-4">Write a Review</h3>
           <form onSubmit={handleSubmitReview}>
             <div className="mb-4">
               <p className="mb-2">Your Rating</p>
@@ -135,15 +147,18 @@ export function MovieReviews({ movieId }: MovieReviewsProps) {
                     key={i}
                     type="button"
                     disabled={isPending}
-                    onClick={() => { setRating(i + 1); }}
+                    onClick={() => {
+                      setRating(i + 1);
+                    }}
                     className="focus:outline-none"
                   >
                     <Star
-                      className={`h-6 w-6 ${
-                        i < rating
-                          ? "fill-yellow-400 text-yellow-400"
-                          : "text-gray-300 hover:text-yellow-400"
-                      }`}
+                      className={`h-6 w-6 transition-all duration-200
+                         ${
+                           i < rating
+                             ? "fill-amber-500  text-amber-500"
+                             : "text-gray-300 hover:text-amber-500"
+                         }`}
                     />
                   </button>
                 ))}
@@ -154,13 +169,29 @@ export function MovieReviews({ movieId }: MovieReviewsProps) {
                 disabled={isPending}
                 placeholder="Write your review here..."
                 value={comment}
-                onChange={(e) => { setComment(e.target.value); }}
-                className="min-h-[100px]"
+                onChange={(e) => {
+                  setComment(e.target.value);
+                }}
+                className="
+                min-h-[100px] w-full resize-none rounded-xl border border-gray-700/50
+                bg-background/60 px-4 py-3 text-sm text-foreground
+              placeholder:text-black/80 placeholder:opacity-100
+              focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50
+                 disabled:opacity-50 disabled:cursor-not-allowed
+                 transition-all duration-200 ease-in-out
+                "
               />
             </div>
             <Button
               type="submit"
               disabled={rating === 0 || !comment.trim() || isPending}
+              className="
+                 mt-2 w-full sm:w-auto rounded-lg px-6 py-2 font-semibold
+                  bg-gradient-to-r from-amber-600 via-amber-800 to-chart-3 text-white
+                 shadow-md transition-all duration-200 ease-in-out
+                 hover:from-chart-3  hover:to-amber-600 hover:scale-105 hover:shadow-lg
+                  disabled:opacity-50 cursor-pointer disabled:
+                 "
             >
               Submit Review
             </Button>

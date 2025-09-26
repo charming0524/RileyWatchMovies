@@ -32,7 +32,7 @@ export default function App() {
             </Route>
           </Routes>
         </BrowserRouter>
-        <Toaster richColors position="top-right" />
+        <Toaster richColors position="top-right" duration={1000} />
         {/* ✅ sonner toast is active everywhere */}
       </AuthProvider>
     </QueryProvider>
