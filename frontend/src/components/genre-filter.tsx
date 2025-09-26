@@ -1,4 +1,3 @@
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 
 interface GenreFilterProps {
